@@ -1,34 +1,38 @@
 package org.example.service;
 
 import org.example.model.Produto;
+import org.example.repository.ProdutoRepositoryImpl;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class ProdutoServiceImpl implements ProdutoService{
 
+    private final ProdutoRepositoryImpl produtoService = new ProdutoRepositoryImpl();
+
     @Override
     public Produto cadastrarProduto(Produto produto) throws SQLException {
-        return null;
+        return produtoService.save(produto);
     }
 
     @Override
     public List<Produto> listarProdutos() throws SQLException {
-        return List.of();
+        return produtoService.findAll();
     }
 
     @Override
     public Produto buscarPorId(int id) throws SQLException {
-        return null;
+        return produtoService.findById(id);
     }
 
     @Override
     public Produto atualizarProduto(Produto produto, int id) throws SQLException {
-        return null;
+        produto.setId(id);
+        return produtoService.update(produto);
     }
 
     @Override
     public boolean excluirProduto(int id) throws SQLException {
-        return false;
+        return produtoService.deleteById(id);
     }
 }

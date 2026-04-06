@@ -3,39 +3,38 @@ package org.example.repository;
 import org.example.model.Produto;
 import org.example.util.ConexaoBanco;
 
-import javax.xml.transform.Result;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProdutoRepositoryImpl implements ProdutoRepository{
+public class ProdutoRepositoryImpl implements ProdutoRepository {
 
     @Override
     public Produto save(Produto produto) throws SQLException {
+        if (produto.getPreco() < 0) {
+            throw new IllegalArgumentException();
+        }
         String command = """
-                INSERT INTO produtos
+                INSERT INTO produto
                 (nome, preco, quantidade, categoria)
                 VALUES
                 (?,?,?,?)
                 """;
         try (Connection conn = ConexaoBanco.conectar();
              PreparedStatement stmt = conn.prepareStatement(command,
-                     PreparedStatement.RETURN_GENERATED_KEYS)){
-                 stmt.setString(1, produto.getNome());
-                 stmt.setDouble(2, produto.getPreco());
-                 stmt.setInt(3, produto.getQuantidade());
-                 stmt.setString(4, produto.getCategoria());
+                     PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, produto.getNome());
+            stmt.setDouble(2, produto.getPreco());
+            stmt.setInt(3, produto.getQuantidade());
+            stmt.setString(4, produto.getCategoria());
 
-                 stmt.executeUpdate();
+            stmt.executeUpdate();
 
-                 ResultSet rs = stmt.getGeneratedKeys();
-                 if(rs.next()) {
-                     produto.setId(rs.getInt(1));
-                     return produto;
-                 }
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                produto.setId(rs.getInt(1));
+                return produto;
+            }
         }
         return null;
     }
@@ -48,11 +47,9 @@ public class ProdutoRepositoryImpl implements ProdutoRepository{
                 """;
         List<Produto> produtos = new ArrayList<>();
         try (Connection conn = ConexaoBanco.conectar();
-             PreparedStatement stmt = conn.prepareStatement(query)){
-
+             PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
-
-            while(rs.next()){
+            while (rs.next()) {
                 int id = rs.getInt("id");
                 String nome = rs.getString("nome");
                 Double preco = rs.getDouble("preco");
@@ -60,23 +57,75 @@ public class ProdutoRepositoryImpl implements ProdutoRepository{
                 String categoria = rs.getString("categoria");
 
                 var produto = new Produto(id, nome, preco, quantidade, categoria);
+                produtos.add(produto);
             }
         }
-        return List.of();
+        return produtos;
     }
 
     @Override
     public Produto findById(int id) throws SQLException {
+        String query = """
+            SELECT id, nome, preco, quantidade, categoria
+            FROM produto
+            WHERE id = ?
+            """;
+
+        try (Connection conn = ConexaoBanco.conectar();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String nome = rs.getString("nome");
+                    Double preco = rs.getDouble("preco");
+                    int quantidade = rs.getInt("quantidade");
+                    String categoria = rs.getString("categoria");
+
+                    var produto = new Produto(id, nome, preco, quantidade, categoria);
+                    return produto;
+                }
+            }
+        }
         return null;
     }
 
     @Override
     public Produto update(Produto produto) throws SQLException {
-        return null;
+        String command = """
+                UPDATE produto
+                SET nome = ?, 
+                    preco = ?, 
+                    quantidade = ?,
+                    categoria = ?
+                WHERE id = ?
+                """;
+
+        try (Connection conn = ConexaoBanco.conectar();
+             PreparedStatement stmt = conn.prepareStatement(command)) {
+            stmt.setString(1, produto.getNome());
+            stmt.setDouble(2, produto.getPreco());
+            stmt.setInt(3, produto.getQuantidade());
+            stmt.setString(4, produto.getCategoria());
+            stmt.setInt(5, produto.getId());
+            stmt.executeUpdate();
+        }
+        return produto;
     }
 
     @Override
-    public void deleteById(int id) throws SQLException {
+    public boolean deleteById(int id) throws SQLException {
+        String command = """
+                DELETE FROM produto
+                WHERE id = ?
+                """;
+        try (Connection conn = ConexaoBanco.conectar();
+             PreparedStatement stmt = conn.prepareStatement(command)) {
 
+            stmt.setInt(1, id);
+            int linhasAfetadas = stmt.executeUpdate();
+
+            return linhasAfetadas > 0;
+        }
     }
 }
