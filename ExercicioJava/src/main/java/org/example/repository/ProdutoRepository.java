@@ -14,5 +14,5 @@ public interface ProdutoRepository {
 
     Produto update(Produto produto) throws SQLException;
 
-    boolean deleteById(int id) throws SQLException;
+    void deleteById(int id) throws SQLException;
 }

@@ -33,6 +33,12 @@ public class ProdutoServiceImpl implements ProdutoService{
 
     @Override
     public boolean excluirProduto(int id) throws SQLException {
-        return produtoService.deleteById(id);
+        Produto p = produtoService.findById(id);
+
+        if (p != null) {
+            produtoService.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

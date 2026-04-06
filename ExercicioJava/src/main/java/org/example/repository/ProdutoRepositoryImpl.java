@@ -65,11 +65,7 @@ public class ProdutoRepositoryImpl implements ProdutoRepository {
 
     @Override
     public Produto findById(int id) throws SQLException {
-        String query = """
-            SELECT id, nome, preco, quantidade, categoria
-            FROM produto
-            WHERE id = ?
-            """;
+        String query = "SELECT id, nome, preco, quantidade, categoria FROM produto WHERE id = ?";
 
         try (Connection conn = ConexaoBanco.conectar();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -77,13 +73,13 @@ public class ProdutoRepositoryImpl implements ProdutoRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String nome = rs.getString("nome");
-                    Double preco = rs.getDouble("preco");
-                    int quantidade = rs.getInt("quantidade");
-                    String categoria = rs.getString("categoria");
-
-                    var produto = new Produto(id, nome, preco, quantidade, categoria);
-                    return produto;
+                    return new Produto(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getDouble("preco"),
+                        rs.getInt("quantidade"),
+                        rs.getString("categoria")
+                    );
                 }
             }
         }
@@ -114,18 +110,15 @@ public class ProdutoRepositoryImpl implements ProdutoRepository {
     }
 
     @Override
-    public boolean deleteById(int id) throws SQLException {
+    public void deleteById(int id) throws SQLException {
         String command = """
-                DELETE FROM produto
+                DELETE FROM produto 
                 WHERE id = ?
                 """;
         try (Connection conn = ConexaoBanco.conectar();
              PreparedStatement stmt = conn.prepareStatement(command)) {
-
             stmt.setInt(1, id);
-            int linhasAfetadas = stmt.executeUpdate();
-
-            return linhasAfetadas > 0;
+            stmt.executeUpdate();
         }
     }
 }
