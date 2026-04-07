@@ -1,3 +1,3 @@
 # Exercício Java com Testes
-## Atividade comcluída com sucesso.
+## Atividade concluída com sucesso.
 ### Funções implementadas e testes validados com sucesso, sem erros.
